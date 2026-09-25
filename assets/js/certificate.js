@@ -47,12 +47,27 @@
     await preloadResources();
     checkStoredCertificate();
     bindEvents();
+
+    // Redibujar automáticamente apenas el navegador confirme la activación de la fuente Madina
+    if (document.fonts) {
+      document.fonts.ready.then(() => {
+        if (currentCertData) {
+          displaySavedCertificate(currentCertData);
+        } else {
+          updateLivePreview();
+        }
+      });
+    }
   }
 
   // Pre-carga de imagen base y fuentes
   async function preloadResources() {
-    if (document.fonts && document.fonts.ready) {
+    // 1. Forzar explícitamente la carga de la fuente Madina en el registro del navegador
+    if (document.fonts) {
       try {
+        await document.fonts.load(`bold ${INITIAL_FONT_SIZE}px "${FONT_NAME}"`);
+        await document.fonts.load(`${INITIAL_FONT_SIZE}px "${FONT_NAME}"`);
+        await document.fonts.load(`100px "${FONT_NAME}"`);
         await document.fonts.ready;
       } catch (e) {
         console.warn('Document fonts warning:', e);
@@ -196,14 +211,22 @@
     // 1. Dibujar plantilla base
     ctx.drawImage(templateImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // 2. Calcular y dibujar Nombre del Participante
+    // Verificar que la fuente Madina esté lista para dibujar en Canvas
+    if (document.fonts && !document.fonts.check(`${INITIAL_FONT_SIZE}px "${FONT_NAME}"`)) {
+      document.fonts.load(`${INITIAL_FONT_SIZE}px "${FONT_NAME}"`).then(() => {
+        renderCertificateToCanvas(name, folio, targetCanvas, isPlaceholder);
+      });
+      return;
+    }
+
+    // 2. Calcular y dibujar Nombre del Participante (siempre con fuente Madina)
     let fontSize = INITIAL_FONT_SIZE;
-    ctx.font = `${fontSize}px "${FONT_NAME}", "Brush Script MT", cursive`;
+    ctx.font = `${fontSize}px "${FONT_NAME}", cursive`;
 
     let textWidth = ctx.measureText(name).width;
     while (textWidth > MAX_TEXT_WIDTH && fontSize > 80) {
       fontSize -= 4;
-      ctx.font = `${fontSize}px "${FONT_NAME}", "Brush Script MT", cursive`;
+      ctx.font = `${fontSize}px "${FONT_NAME}", cursive`;
       textWidth = ctx.measureText(name).width;
     }
 
