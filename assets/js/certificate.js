@@ -17,7 +17,7 @@
   const TEXT_CENTER_X = 1650;
   const TEXT_CENTER_Y = 1285; // Posición óptima calculada en la plantilla
   const MAX_TEXT_WIDTH = 2650;
-  const INITIAL_FONT_SIZE = 250;
+  const INITIAL_FONT_SIZE = 300;
 
   let templateImage = null;
   let currentCertData = null;
